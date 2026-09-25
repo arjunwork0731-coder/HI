@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VeriMind — Verified Multi-Agent Reasoning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M16 2 4 7v8c0 7.2 5.1 13.4 12 15 6.9-1.6 12-7.8 12-15V7L16 2z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m10.5 16 4 4 7-8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>VeriMind</span><small>multi-agent reasoning &amp; verification engine</small>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="run">Run</button>
+    <button class="tab" data-tab="history">Audit log</button>
+    <button class="tab" data-tab="eval">Evaluation</button>
+    <button class="tab" data-tab="arch">Architecture</button>
+  </nav>
+  <div id="modeBadge" class="mode-badge">…</div>
+</header>
+
+<main>
+<!-- ============================================================ RUN -->
+<section id="tab-run" class="tabpane active">
+  <div class="run-grid">
+    <aside class="panel input-panel">
+      <h2>Task</h2>
+      <label class="lbl" for="scenario">Load a test scenario</label>
+      <select id="scenario"><option value="">— choose from the evaluation set —</option></select>
+      <textarea id="task" rows="4" placeholder="Ask a question, request a calculation, code, or a tool action…"></textarea>
+      <details id="docsBox">
+        <summary>Attach a document (treated as untrusted)</summary>
+        <input id="docTitle" placeholder="Title (optional)">
+        <textarea id="docText" rows="4" placeholder="Paste document text…"></textarea>
+      </details>
+      <div class="toggles">
+        <label class="switch"><input type="checkbox" id="optFaults"><span></span>Red-team: inject faults into first draft</label>
+        <label class="switch"><input type="checkbox" id="optWeb" checked><span></span>Wikipedia retrieval</label>
+        <label class="switch"><input type="checkbox" id="optJudge" checked><span></span>LLM judge (2nd verification path)</label>
+        <label class="rounds">Max revision rounds <input type="number" id="optRounds" min="1" max="5" value="3"></label>
+      </div>
+      <button id="runBtn" class="primary">Run with verification</button>
+      <p class="hint">Every claim is checked by independent paths before the finalizer may accept it. Try a scenario with red-team mode on to watch the self-correction loop.</p>
+    </aside>
+
+    <div class="run-main">
+      <div class="pipeline" id="pipeline">
+        <div class="stage" data-agent="planner"><b>Planner</b><span>task, ambiguity, premises</span></div>
+        <div class="arrow">→</div>
+        <div class="stage" data-agent="researcher"><b>Researcher</b><span>evidence &amp; grounding</span></div>
+        <div class="arrow">→</div>
+        <div class="stage" data-agent="coder"><b>Coder / Tools</b><span>calc, code, API calls</span></div>
+        <div class="arrow">→</div>
+        <div class="stage" data-agent="verifier"><b>Verifier</b><span>independent checks</span></div>
+        <div class="arrow">→</div>
+        <div class="stage" data-agent="critic"><b>Critic</b><span>reasoning review</span></div>
+        <div class="arrow">→</div>
+        <div class="stage" data-agent="finalizer"><b>Finalizer</b><span>decision &amp; audit</span></div>
+        <div class="loop" id="loopBadge" hidden>↺ <span>0</span> revision(s)</div>
+      </div>
+
+      <div id="empty" class="panel empty">
+        <h3>What this does</h3>
+        <p>Specialised agents plan, research, generate and <em>independently verify</em> every important output — facts against evidence, arithmetic with a calculator, code in a sandbox, tool calls against an API registry — then correct, ask for clarification, or refuse when a reliable answer is impossible.</p>
+      </div>
+
+      <div id="decision" class="panel decision" hidden>
+        <div class="decision-head">
+          <span id="statusPill" class="pill">—</span>
+          <div class="conf"><span>confidence</span><div class="bar"><div id="confBar"></div></div><b id="confVal">—</b></div>
+          <span id="runMeta" class="meta"></span>
+        </div>
+        <div id="answer" class="answer"></div>
+        <div id="decisionExtras"></div>
+      </div>
+
+      <div class="cols">
+        <div class="panel">
+          <div class="panel-head"><h3>Live agent trace</h3><span class="count" id="evCount"></span></div>
+          <ol id="timeline" class="timeline"></ol>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Claim verification</h3>
+            <select id="roundSel" hidden></select></div>
+          <div id="claims"></div>
+          <div id="codeActions"></div>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="panel">
+          <div class="panel-head"><h3>Evidence</h3><span class="count" id="evidCount"></span></div>
+          <div id="conflicts"></div>
+          <div id="evidence" class="evidence"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Revisions &amp; metrics</h3></div>
+          <div id="faults"></div>
+          <div id="revisions"></div>
+          <div id="metrics"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ HISTORY -->
+<section id="tab-history" class="tabpane">
+  <div class="panel">
+    <div class="panel-head"><h3>Audit log — every run is persisted with its full trace</h3><button id="refreshHist" class="ghost">Refresh</button></div>
+    <table class="tbl" id="histTbl"><thead><tr><th>When (UTC)</th><th>Task</th><th>Decision</th><th>Confidence</th><th>Mode</th></tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<!-- ============================================================ EVAL -->
+<section id="tab-eval" class="tabpane">
+  <div id="evalBody"><div class="panel">Loading evaluation results…</div></div>
+</section>
+
+<!-- ============================================================ ARCH -->
+<section id="tab-arch" class="tabpane">
+  <div class="panel">
+    <h3>Architecture</h3>
+    <div class="arch" id="archDiagram"></div>
+  </div>
+  <div class="cols">
+    <div class="panel"><h3>Agent prompts</h3><div id="prompts"></div></div>
+    <div class="panel"><h3>Tool registry (validated before any execution)</h3><div id="tools"></div>
+      <h3 style="margin-top:18px">Knowledge base</h3><div id="kbList"></div></div>
+  </div>
+</section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

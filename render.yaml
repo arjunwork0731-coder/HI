@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: verimind
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: VERIFIER_MODEL
+        value: llama-3.1-8b-instant
+      - key: ENABLE_WEB
+        value: "1"
