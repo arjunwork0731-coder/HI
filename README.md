@@ -254,8 +254,9 @@ docs/                architecture, prompts, demo script
 
 | Name | Role | Institution |
 |---|---|---|
-| Kalyan | *role* | RV College of Engineering, Bengaluru |
-| *member 2* | *role* | |
-| *member 3* | *role* | |
+| Arjun Reddy | *role* | MBU |
+| Susmitha | *role* | MBU |
+| Bhargavi | *role* | MBU |
+| Pranathi | *role | MBU |
 
-*Team name:* ______ · *Contact:* ______
+*Team name:* NEXGEN · 
