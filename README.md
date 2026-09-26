@@ -252,7 +252,7 @@ docs/                architecture, prompts, demo script
 
 ## Team
 
-| Name | Role | Institution |
+| Name | Dept | Institution |
 |---|---|---|
 | Arjun Reddy | DS | MBU |
 | Susmitha | DS | MBU |
