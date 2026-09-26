@@ -254,9 +254,9 @@ docs/                architecture, prompts, demo script
 
 | Name | Role | Institution |
 |---|---|---|
-| Arjun Reddy | *role* | MBU |
-| Susmitha | *role* | MBU |
-| Bhargavi | *role* | MBU |
-| Pranathi | *role | MBU |
+| Arjun Reddy | DS | MBU |
+| Susmitha | DS | MBU |
+| Bhargavi | DS | MBU |
+| Pranathi | DS | MBU |
 
 *Team name:* NEXGEN · 
